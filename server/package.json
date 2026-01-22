@@ -20,6 +20,7 @@
     "mongodb": "^7.0.0",
     "mongoose": "^9.1.5",
     "nodemon": "^3.1.11",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "twilio": "^5.12.0"
   }
 }
