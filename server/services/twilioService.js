@@ -30,6 +30,7 @@ const verifyOtp = async(phoneNumber, otp) => {
         console.log('this is otp', otp);
         const response = await client.verify.v2.services(serviceSID).verificationChecks.create({
             to : phoneNumber,
+            code: otp,
             channel : 'sms'
         });
         console.log('this is my response', response);
