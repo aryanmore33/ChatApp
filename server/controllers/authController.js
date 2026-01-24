@@ -4,6 +4,7 @@ const responseHandler = require("../utils/responseHandler");
 const sendEmail = require("../services/emailService");
 const twilioService = require("../services/twilioService");
 const generateToken = require("../utils/generateToken");
+const { generateUploadSignature } = require('../config/cloudinary.config');
 
 // ================= SEND OTP =================
 const sendOtp = async (req, res) => {
@@ -136,20 +137,56 @@ const verifyOtp = async (req, res) => {
 };
 
 // to update profile
-const updateProfile = async(req, res) => {
-  const {username, agreedToTerms, about} = req.body;
+const updateProfile = async (req, res) => {
+  const { username, about, profilePicture, profilePictureId } = req.body;
   const userId = req.user.userId;
 
   try {
-    const user = await User.findById(userId);
-    const file = req.file;
-    if(file){
-      const uploadResult =
-      user.profilePicture = 
-    }
-  } catch (error) {
-    
-  }
-}
+    const updatedFields = {};
 
-module.exports = { sendOtp, verifyOtp };
+    if (username) {
+      if (username.length < 3) {
+        return res.status(400).json({ success: false, message: 'Username too short' });
+      }
+      updatedFields.username = username;
+    }
+
+    if (about) updatedFields.about = about;
+
+    if (profilePicture) {
+      updatedFields.profilePicture = {
+        url: profilePicture,
+        public_id: profilePictureId || null
+      };
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updatedFields },
+      { new: true }
+    );
+
+    return res.json({
+      success: true,
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+const getProfilePicUploadSignature = (req, res) => {
+  try {
+    const uploadConfig = generateUploadSignature({
+      folder: `profiles/${req.user.userId}`,
+      public_id: `avatar`
+    });
+    res.json(uploadConfig);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Could not generate upload signature' });
+  }
+};
+
+
+module.exports = { sendOtp, verifyOtp, updateProfile, getProfilePicUploadSignature };

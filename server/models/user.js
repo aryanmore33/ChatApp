@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true,
         validate: {
-            validator: function(v) {
+            validator: function (v) {
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
             },
             message: props => `${props.value} is not a valid email!`,
@@ -38,10 +38,12 @@ const userSchema = new mongoose.Schema({
         default: false,
     },
     profilePicture: {
-        type: String,
-        default: null,
+        // type: String,
+        // default: null,
+        url: { type: String, default: null },
+        public_id: { type: String, default: null }
     },
-    bio: {
+    about: {
         type: String,
         default: null,
     },
