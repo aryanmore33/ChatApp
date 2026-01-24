@@ -135,4 +135,21 @@ const verifyOtp = async (req, res) => {
   }
 };
 
+// to update profile
+const updateProfile = async(req, res) => {
+  const {username, agreedToTerms, about} = req.body;
+  const userId = req.user.userId;
+
+  try {
+    const user = await User.findById(userId);
+    const file = req.file;
+    if(file){
+      const uploadResult =
+      user.profilePicture = 
+    }
+  } catch (error) {
+    
+  }
+}
+
 module.exports = { sendOtp, verifyOtp };
