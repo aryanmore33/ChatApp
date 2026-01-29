@@ -4,7 +4,7 @@ const responseHandler = require("../utils/responseHandler");
 const sendEmail = require("../services/emailService");
 const twilioService = require("../services/twilioService");
 const generateToken = require("../utils/generateToken");
-const { generateUploadSignature } = require('../config/cloudinary.config');
+const {generateUploadSignature}  = require("../config/cloudinary");
 
 // ================= SEND OTP =================
 const sendOtp = async (req, res) => {
@@ -138,7 +138,7 @@ const verifyOtp = async (req, res) => {
 
 // to update profile
 const updateProfile = async (req, res) => {
-  const { username, about, profilePicture, profilePictureId } = req.body;
+  const { username, about, profilePicture, profilePictureId, agreedToTerms } = req.body;
   const userId = req.user.userId;
 
   try {
@@ -152,6 +152,7 @@ const updateProfile = async (req, res) => {
     }
 
     if (about) updatedFields.about = about;
+    if (agreedToTerms) updatedFields.agreedToTerms = agreedToTerms;
 
     if (profilePicture) {
       updatedFields.profilePicture = {
