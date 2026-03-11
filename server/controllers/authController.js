@@ -1,10 +1,13 @@
 const User = require("../models/user");
+const Conversation = require("../models/conversation")
 const otpGenerator = require("../utils/otpGenerator");
 const responseHandler = require("../utils/responseHandler");
 const sendEmail = require("../services/emailService");
 const twilioService = require("../services/twilioService");
 const generateToken = require("../utils/generateToken");
-const {generateUploadSignature}  = require("../config/cloudinary");
+const { generateUploadSignature } = require("../config/cloudinary");
+const jwt = require("jsonwebtoken");
+const express = require("express");
 
 // ================= SEND OTP =================
 const sendOtp = async (req, res) => {
@@ -121,7 +124,7 @@ const verifyOtp = async (req, res) => {
 
     res.cookie("auth_token", token, {
       httpOnly: true,
-    //   secure: process.env.NODE_ENV === "production",
+      //   secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 365 * 24 * 60 * 60 * 1000
     });
@@ -189,5 +192,63 @@ const getProfilePicUploadSignature = (req, res) => {
   }
 };
 
+const checkAuthenticated = async(req, res) => {
+  try {
+    const userId = req.user.userId;
+    if(!userId){
+      return responseHandler(res, 404, "PLease Login to access")
+    }
+    const user = await User.findById(userId);
+    if(!user){
+      return responseHandler(res, 404, "User not found")
+    }
+    return responseHandler(res, 200, "User is authenticated", { user });
+  } catch (error) {
+    console.error(error);
+    return responseHandler(res, 500, "Internal Server Error")
+  }
+}
 
-module.exports = { sendOtp, verifyOtp, updateProfile, getProfilePicUploadSignature };
+const logout = (req, res) => {
+  try {
+    res.cookie("auth_token", "", { expires: new Date(0) });
+    return responseHandler(res, 200, "Logged out successfully");
+  } catch (error) {
+    return responseHandler(res, 500, "INternal Server Error")
+  }
+}
+
+const getAllUsers = async (req, res) => {
+  const loggedInUser = req.user.userId;
+  try {
+    const users = await User.find({ _id: { $ne: loggedInUser } }).select(
+      "username email phoneNumber about profilePicture isOnline lastSeen"
+    )
+    const userConversations = await Promise.all(users.map(async (user) => {
+      const conversation = await Conversation.findOne({
+        participants: { $all: [loggedInUser, user?._id] } // Ensure both users are participants
+      }).populate({
+        path: 'lastMessage',
+        select: 'content sender createdAt receiver'
+      }).lean();
+      return{
+        ...user,
+        conversation: conversation || null
+      }
+    }))
+    return responseHandler(res, 200, "Users fetched successfully", { users: userConversations });
+  } catch (error) {
+    console.error(error);
+    return responseHandler(res, 500, "Internal Server Error")
+  }
+}
+
+module.exports = {
+  sendOtp,
+  verifyOtp,
+  updateProfile,
+  getProfilePicUploadSignature,
+  logout,
+  checkAuthenticated,
+  getAllUsers,
+};

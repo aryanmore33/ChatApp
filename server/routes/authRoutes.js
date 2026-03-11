@@ -6,6 +6,9 @@ const router = express.Router();
 
 router.post('/send-otp', authController.sendOtp);
 router.post('/verify-otp', authController.verifyOtp);
+router.get('/logout', authController.logout);
+router.get('/check-auth', authMiddleware, authController.checkAuthenticated);
+router.get('/all-users', authMiddleware, authController.getAllUsers);
 
 //update Profile
 router.put('/update-profile', authMiddleware, authController.updateProfile);
